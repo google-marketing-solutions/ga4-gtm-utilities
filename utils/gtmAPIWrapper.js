@@ -22,7 +22,8 @@ const gtmAPIResources = {
   tags: TagManager.Accounts.Containers.Workspaces.Tags,
   triggers: TagManager.Accounts.Containers.Workspaces.Triggers,
   builtInVariables: TagManager.Accounts.Containers.Workspaces.Built_in_variables,
-  folders: TagManager.Accounts.Containers.Workspaces.Folders
+  folders: TagManager.Accounts.Containers.Workspaces.Folders,
+  clients: TagManager.Accounts.Containers.Workspaces.Clients
 };
 
 const gtmRequestDelay = 4000;

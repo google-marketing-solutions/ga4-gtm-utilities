@@ -1,18 +1,36 @@
 /**
- * 
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Writes variable usage data to the sheet.
  */
 function writeVariableUsageToSheet() {
   clearRangeContent('variableUsage', sheetsMeta.variableUsage.ranges[0].name);
   const variableUsageData = getAllVariableUsage();
   writeToSheet(
-    variableUsageData,'variableUsage',
+    variableUsageData, 'variableUsage',
     sheetsMeta.variableUsage.ranges[0].name);
   const usageSheet = ss.getSheetByName(sheetsMeta.variableUsage.sheetName);
-  usageSheet.setRowHeightsForced(2, variableUsageData.length, 21);  
+  if (variableUsageData.length > 0) {
+    usageSheet.setRowHeightsForced(2, variableUsageData.length, 21);
+  }
 }
 
 /**
- * 
+ * Deletes variables marked for deletion.
  */
 function deleteUsageVariables() {
   const usageSheetData = getDataFromSheet(
@@ -20,16 +38,15 @@ function deleteUsageVariables() {
   if (usageSheetData) {
     usageSheetData.forEach(variable => {
       if (variable[variable.length - 1]) {
-        const url = 
-          `https://tagmanager.google.com/#/container/${variable.path}`;
         const path = variable[1];
+        const url = `https://tagmanager.google.com/#/container/${path}`;
         try {
           removeGTMResource('variables', path);
           logChange(
-            variable[0], 'variable', variable.split('/')[7], 'Deleted', url);
+            variable[0], 'variable', path.split('/')[7], 'Deleted', url);
         } catch(e) {
           logChange(
-            variable[0], 'variable', variable.split('/')[7], e.message, url);
+            variable[0], 'variable', path.split('/')[7], e.message, url);
         }
       }
     });
@@ -37,19 +54,26 @@ function deleteUsageVariables() {
 }
 
 /**
- * 
+ * Gets all variables and searches for their usage in tags, triggers, other variables, and clients.
+ * @return {!Array<!Array>} Array of variable usage details.
  */
 function getAllVariableUsage() {
   const workspace = getSelectedWorkspacePath();
   const variables = listGTMResources('variables', workspace);
   const tags = listGTMResources('tags', workspace);
   const triggers = listGTMResources('triggers', workspace);
+  
+  const isServer = isServerContainer(workspace);
+  const clients = isServer ? listGTMResources('clients', workspace) : null;
+
   const finalData = [];
   if (variables) {
     variables.forEach(variable => {
       const tagInfo = getVariableUsageForTags(tags, variable);
       const triggerInfo = getVariableUsageForTriggers(triggers, variable);
       const variableInfo = getVariableUsageForVariables(variables, variable);
+      const clientInfo = isServer ? getVariableUsageForClients(clients, variable) : { clientUsageCount: 0, clientNames: '' };
+      
       finalData.push([
         `=HYPERLINK("https://tagmanager.google.com/#/container/${variable.path}","${variable.name}")`,
         variable.path,
@@ -58,7 +82,9 @@ function getAllVariableUsage() {
         triggerInfo.triggerUsageCount,
         triggerInfo.triggerNames,
         variableInfo.variableUsageCount,
-        variableInfo.variableNames
+        variableInfo.variableNames,
+        clientInfo.clientUsageCount,
+        clientInfo.clientNames
       ]);
     });
   }
@@ -66,7 +92,10 @@ function getAllVariableUsage() {
 }
 
 /**
- * 
+ * Checks if a variable is inside parameters list.
+ * @param {string} variableName Name of variable.
+ * @param {!Array} parameters Parameters list.
+ * @return {boolean} True if found.
  */
 function checkIfVariableIsInParameters(variableName, parameters) {
   const variableNameWithBrackets = `{{${variableName}}}`;
@@ -101,7 +130,10 @@ function checkIfVariableIsInParameters(variableName, parameters) {
 }
 
 /**
- * 
+ * Searches variable usage inside tags.
+ * @param {!Array} tags Tags list.
+ * @param {!Object} variable Variable object.
+ * @return {!Object} Usage details.
  */
 function getVariableUsageForTags(tags, variable) {
   const tagInfo = {
@@ -131,7 +163,10 @@ function getVariableUsageForTags(tags, variable) {
 }
 
 /**
- * 
+ * Searches variable usage inside triggers.
+ * @param {!Array} triggers Triggers list.
+ * @param {!Object} variable Variable object.
+ * @return {!Object} Usage details.
  */
 function getVariableUsageForTriggers(triggers, variable) {
   const triggerInfo = {
@@ -193,7 +228,10 @@ function getVariableUsageForTriggers(triggers, variable) {
 }
 
 /**
- * 
+ * Searches variable usage inside other variables.
+ * @param {!Array} variables Variables list.
+ * @param {!Object} variable Target variable object.
+ * @return {!Object} Usage details.
  */
 function getVariableUsageForVariables(variables, variable) {
   const variableInfo = {
@@ -229,4 +267,31 @@ function getVariableUsageForVariables(variables, variable) {
     }
   });
   return variableInfo;
+}
+
+/**
+ * Searches variable usage inside server-side clients.
+ * @param {!Array} clients Clients list.
+ * @param {!Object} variable Target variable object.
+ * @return {!Object} Usage details.
+ */
+function getVariableUsageForClients(clients, variable) {
+  const clientInfo = {
+    clientNames: '',
+    clientUsageCount: 0
+  };
+  if (clients) {
+    clients.forEach(client => {
+      const isInClient = checkIfVariableIsInParameters(variable.name, client.parameter);
+      if (isInClient) {
+        clientInfo.clientUsageCount++;
+        if (clientInfo.clientNames) {
+          clientInfo.clientNames += `,\n${client.name}`;
+        } else {
+          clientInfo.clientNames += client.name;
+        }
+      }
+    });
+  }
+  return clientInfo;
 }

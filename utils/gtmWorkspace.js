@@ -19,8 +19,11 @@
  */
 
 function writeGtmAccountsToSheet() {
+  clearRangeContent('gtmWorkspace', 'accounts list');
+  clearRangeContent('gtmWorkspace', 'containers list');
+  clearRangeContent('gtmWorkspace', 'workspaces list');
   const accounts = listGTMResources('accounts');
-  if (accounts.length > 0) {
+  if (accounts && accounts.length > 0) {
     const formattedAccounts = accounts.reduce((arr, account) => {
       arr.push([account.name, account.path]);
       return arr;
@@ -33,6 +36,8 @@ function writeGtmAccountsToSheet() {
  * Writes a user's GTM containers to the sheet.
  */
 function writeSelectedGtmContainersToSheet() {
+  clearRangeContent('gtmWorkspace', 'containers list');
+  clearRangeContent('gtmWorkspace', 'workspaces list');
   const accounts = getDataFromSheet('gtmWorkspace', 'accounts list');
   const selectedAccounts = accounts.filter(account => account[2]);
   let containers = [];
@@ -55,6 +60,7 @@ function writeSelectedGtmContainersToSheet() {
  * Writes a user's GTM workspaces to the sheet.
  */
 function writeSelectedGtmWorkspacesToSheet() {
+  clearRangeContent('gtmWorkspace', 'workspaces list');
   const containers = getDataFromSheet('gtmWorkspace', 'containers list');
   const selectedContainers = containers.filter(container => container[2]);
   let workspaces = [];

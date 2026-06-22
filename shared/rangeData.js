@@ -201,13 +201,49 @@ const sheetsMeta = {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 9
+        numColumns: 11
       },
       write: {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 8
+        numColumns: 10
+      }
+    }]
+  },
+  sgtmClients: {
+    sheetName: '(sGTM) Client Settings',
+    ranges: [{
+      name: 'clients',
+      read: {
+        row: 2,
+        column: 1,
+        numRows: 1,
+        numColumns: 15
+      },
+      write: {
+        row: 2,
+        column: 1,
+        numRows: 1,
+        numColumns: 12
+      }
+    }]
+  },
+  sgtmTags: {
+    sheetName: '(sGTM) Tag Settings',
+    ranges: [{
+      name: 'tags',
+      read: {
+        row: 2,
+        column: 1,
+        numRows: 1,
+        numColumns: 17
+      },
+      write: {
+        row: 2,
+        column: 1,
+        numRows: 1,
+        numColumns: 14
       }
     }]
   }

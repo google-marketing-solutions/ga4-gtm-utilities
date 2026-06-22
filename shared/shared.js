@@ -203,3 +203,23 @@ function writeSettingVariableNamesToValidationSheet(variables) {
 function errorResponse(response) {
   return `Error ${response.statusCode}: ' ${response.message}`;
 }
+
+/**
+ * Checks if the current GTM container is a Server container.
+ * @param {string} workspacePath The workspace path string.
+ * @return {boolean} True if the container type is 'server'.
+ */
+function isServerContainer(workspacePath) {
+  if (!workspacePath) return false;
+  try {
+    const parts = workspacePath.split('/');
+    if (parts.length >= 4) {
+      const containerPath = parts.slice(0, 4).join('/');
+      const container = TagManager.Accounts.Containers.get(containerPath);
+      return container && container.usageContext && container.usageContext.indexOf('server') !== -1;
+    }
+  } catch (e) {
+    console.log('Error in isServerContainer: ' + e.message);
+  }
+  return false;
+}

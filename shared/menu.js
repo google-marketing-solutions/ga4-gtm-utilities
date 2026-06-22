@@ -42,13 +42,22 @@ function onOpen() {
   const variableUsage = ui
   .createMenu('Variable Usage')
   .addItem('List', 'writeVariableUsageToSheet')
-  .addItem('Delete', 'deleteUsageVariables')
+  .addItem('Delete', 'deleteUsageVariables');
+
+  const sgtmSubMenu = ui
+  .createMenu('Server-side Settings (sGTM)')
+  .addItem('List Clients', 'writeSgtmClientsToSheet')
+  .addItem('Modify Clients', 'modifySgtmClients')
+  .addSeparator()
+  .addItem('List Server Tags', 'writeSgtmTagsToSheet')
+  .addItem('Modify Server Tags', 'modifySgtmTags');
 
   ui
   .createMenu('GA4 GTM Utilities')
   .addSubMenu(workspaceSubMenu)
   .addSubMenu(modifyParamsAndUserProperties)
   .addSubMenu(eventTags)
+  .addSubMenu(sgtmSubMenu)
   .addSubMenu(variableUsage)
 	.addSeparator()
   .addSubMenu(listVariables)
