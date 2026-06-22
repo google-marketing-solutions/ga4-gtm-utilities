@@ -33,20 +33,24 @@ function writeVariableUsageToSheet() {
  * Deletes variables marked for deletion.
  */
 function deleteUsageVariables() {
-  const usageSheetData = getDataFromSheet(
+  const usageSheetData = getDataWithRowNumbers(
     'variableUsage', sheetsMeta.variableUsage.ranges[0].name);
   if (usageSheetData) {
-    usageSheetData.forEach(variable => {
-      if (variable[variable.length - 1]) {
+    usageSheetData.forEach(rowInfo => {
+      const variable = rowInfo.values;
+      const rowNumber = rowInfo.rowNumber;
+      if (variable[8]) {
         const path = variable[1];
         const url = `https://tagmanager.google.com/#/container/${path}`;
         try {
           removeGTMResource('variables', path);
           logChange(
             variable[0], 'variable', path.split('/')[7], 'Deleted', url);
+          writeActionStatus('variableUsage', rowNumber, 10, 'Deleted successfully');
         } catch(e) {
           logChange(
             variable[0], 'variable', path.split('/')[7], e.message, url);
+          writeActionStatus('variableUsage', rowNumber, 10, 'Error: ' + e.message);
         }
       }
     });
@@ -62,9 +66,6 @@ function getAllVariableUsage() {
   const variables = listGTMResources('variables', workspace);
   const tags = listGTMResources('tags', workspace);
   const triggers = listGTMResources('triggers', workspace);
-  
-  const isServer = isServerContainer(workspace);
-  const clients = isServer ? listGTMResources('clients', workspace) : null;
 
   const finalData = [];
   if (variables) {
@@ -72,7 +73,6 @@ function getAllVariableUsage() {
       const tagInfo = getVariableUsageForTags(tags, variable);
       const triggerInfo = getVariableUsageForTriggers(triggers, variable);
       const variableInfo = getVariableUsageForVariables(variables, variable);
-      const clientInfo = isServer ? getVariableUsageForClients(clients, variable) : { clientUsageCount: 0, clientNames: '' };
       
       finalData.push([
         `=HYPERLINK("https://tagmanager.google.com/#/container/${variable.path}","${variable.name}")`,
@@ -82,9 +82,7 @@ function getAllVariableUsage() {
         triggerInfo.triggerUsageCount,
         triggerInfo.triggerNames,
         variableInfo.variableUsageCount,
-        variableInfo.variableNames,
-        clientInfo.clientUsageCount,
-        clientInfo.clientNames
+        variableInfo.variableNames
       ]);
     });
   }

@@ -69,7 +69,7 @@ const sheetsMeta = {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 7
+        numColumns: 8
       },
       write: {
         row: 2,
@@ -133,7 +133,7 @@ const sheetsMeta = {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 29
+        numColumns: 30
       }, 
       write: {
         row: 2,
@@ -201,13 +201,13 @@ const sheetsMeta = {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 11
+        numColumns: 10
       },
       write: {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 10
+        numColumns: 8
       }
     }]
   },
@@ -216,16 +216,16 @@ const sheetsMeta = {
     ranges: [{
       name: 'clients',
       read: {
-        row: 2,
+        row: 3,
         column: 1,
         numRows: 1,
-        numColumns: 15
+        numColumns: 26
       },
       write: {
-        row: 2,
+        row: 3,
         column: 1,
         numRows: 1,
-        numColumns: 12
+        numColumns: 22
       }
     }]
   },
@@ -237,7 +237,7 @@ const sheetsMeta = {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 17
+        numColumns: 18
       },
       write: {
         row: 2,

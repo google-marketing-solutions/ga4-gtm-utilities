@@ -65,6 +65,50 @@ function getDataFromSheet(sheetsMetaField, rangeName) {
 }
 
 /**
+ * Gets data from a specified sheet and range along with the actual sheet row numbers.
+ * @param {string} sheetsMetaField The name of the sheet to read the data from.
+ * @param {string} rangeName The name of the range to read the data from.
+ * @return {!Array<!Object>} Array of objects containing rowNumber and values.
+ */
+function getDataWithRowNumbers(sheetsMetaField, rangeName) {
+  let ranges = null;
+  sheetsMeta[sheetsMetaField].ranges.forEach(range => {
+    if (range.name == rangeName) {
+      ranges = range.read;
+    }
+  });
+  let sheet = ss.getSheetByName(sheetsMeta[sheetsMetaField].sheetName);
+  const lastRow = sheet.getLastRow();
+  const numRows = lastRow - ranges.row + 1;
+  if (numRows > 0) {
+    const data = sheet.getRange(ranges.row, ranges.column, numRows, ranges.numColumns).getValues();
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i][0] !== '') {
+        result.push({
+          rowNumber: ranges.row + i,
+          values: data[i]
+        });
+      }
+    }
+    return result;
+  }
+  return [];
+}
+
+/**
+ * Writes the action taken status back to a specific cell in the sheet.
+ * @param {string} sheetsMetaField The sheet name identifier.
+ * @param {number} rowNumber The 1-indexed sheet row number.
+ * @param {number} columnNumber The 1-indexed sheet column number.
+ * @param {string} status The status/message to write.
+ */
+function writeActionStatus(sheetsMetaField, rowNumber, columnNumber, status) {
+  const sheet = ss.getSheetByName(sheetsMeta[sheetsMetaField].sheetName);
+  sheet.getRange(rowNumber, columnNumber).setValue(status);
+}
+
+/**
  * Writes data to a specified sheet.
  * @param {!Array} data The data to be written to the sheet.
  * @param {string} sheetName The name of the sheet to which the data will be written.

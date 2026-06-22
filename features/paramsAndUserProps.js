@@ -141,14 +141,21 @@ function modifyParametersAndUserProperties() {
       }
       const response = updateGTMResource(
         'tags', getSelectedWorkspacePath() + '/tags/' + tag.tagId, tag);
+      const rows = paramAndUserPropertySettings.rows;
       if (response.tagManagerUrl) {
         const actionTaken = generateSuccessfullActionTakenText(
           newSettings[tag.tagId]);
         logChange(response.name, response.type, response.tagId, actionTaken, 
-          response.tagManagerUrl)
+          response.tagManagerUrl);
+        rows.forEach(r => {
+          writeActionStatus('modifyParamsAndUserProps', r.rowNumber, 8, 'Success');
+        });
       } else {
-        logChange(tag.name, tag.type, tag.tagId, errorResponse(response), 
-          tag.tagManagerUrl)
+        const errMsg = errorResponse(response);
+        logChange(tag.name, tag.type, tag.tagId, errMsg, tag.tagManagerUrl);
+        rows.forEach(r => {
+          writeActionStatus('modifyParamsAndUserProps', r.rowNumber, 8, errMsg);
+        });
       }
     }
   });
@@ -161,8 +168,10 @@ function modifyParametersAndUserProperties() {
  * @return {!Array<!Object>}
  */
 function organizeParamsAndUserPropsByTag() {
-  const data = getDataFromSheet('modifyParamsAndUserProps', 'settings');
-  return data.reduce((tagObj, row) => {
+  const data = getDataWithRowNumbers('modifyParamsAndUserProps', 'settings');
+  return data.reduce((tagObj, rowInfo) => {
+    const row = rowInfo.values;
+    const rowNumber = rowInfo.rowNumber;
     const tagId = row[1];
     const type = row[3];
     const name = row[4];
@@ -178,9 +187,11 @@ function organizeParamsAndUserPropsByTag() {
           remove: {
             parameter: [],
             user_property: []
-          }
+          },
+          rows: []
         };
       }
+      tagObj[tagId].rows.push({ rowNumber, action, type, name });
       if (action == 'Create') {
         if (type == 'parameter') {
           tagObj[tagId].create[type].push(buildParameterMapObject(name, value));

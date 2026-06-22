@@ -130,51 +130,66 @@ function writeGA4EventTagstoSheet() {
  */
 function modifyGA4EventTags() {
   const workspacePath = getSelectedWorkspacePath();
-  const tagSettingsData = getDataFromSheet('eventTags', 'tags');
+  const tagSettingsData = getDataWithRowNumbers('eventTags', 'tags');
   const tags = listGTMResources('tags', workspacePath);
   const triggers = listGTMResources('triggers', workspacePath);
   const folders = listGTMResources('folders', workspacePath);
-  tagSettingsData.forEach(newSettings => {
-    const create = newSettings[newSettings.length - 3];
-    const update = newSettings[newSettings.length - 2];
-    const remove = newSettings[newSettings.length - 1];
-    if (create && !update && !remove) {
-      // Create a new tag.
-      const payload = buildGA4EventPayload(
-        newSettings, triggers, tags, folders, 'create');
-      const response = createGTMResource('tags', newSettings[1], payload);
-      if (response.tagManagerUrl) {
-        // Write succesful tag creation to sheet.
-        logChange(response.name, response.type, response.tagId, 'created',
-          response.tagManagerUrl);
+  tagSettingsData.forEach(rowInfo => {
+    const newSettings = rowInfo.values;
+    const rowNumber = rowInfo.rowNumber;
+    const create = newSettings[26];
+    const update = newSettings[27];
+    const remove = newSettings[28];
+    if (create || update || remove) {
+      if (create && !update && !remove) {
+        // Create a new tag.
+        const payload = buildGA4EventPayload(
+          newSettings, triggers, tags, folders, 'create');
+        const response = createGTMResource('tags', newSettings[1], payload);
+        if (response.tagManagerUrl) {
+          // Write succesful tag creation to sheet.
+          logChange(response.name, response.type, response.tagId, 'created',
+            response.tagManagerUrl);
+          writeActionStatus('eventTags', rowNumber, 30, 'Created successfully');
+        } else {
+          // Write error message to sheet.
+          const errMsg = errorResponse(response);
+          logChange(newSettings[2], '',  '', errMsg, '');
+          writeActionStatus('eventTags', rowNumber, 30, errMsg);
+        }  
+      } else if (!create && update && !remove) {
+        // Update an existing tag.
+        const payload = buildGA4EventPayload(
+          newSettings, triggers, tags, folders, 'update');
+        const response = updateGTMResource(
+          'tags', `${newSettings[1]}/tags/${newSettings[3]}`, payload);
+        if (response.tagManagerUrl) {
+          // Write a successful tag update to sheet.
+          logChange(response.name, response.type, response.tagId, 'updated',
+            response.tagManagerUrl);
+          writeActionStatus('eventTags', rowNumber, 30, 'Updated successfully');
+        } else {
+          // Write error message to sheet.
+          const errMsg = errorResponse(response);
+          logChange(newSettings[2], '',  '', errMsg, '');
+          writeActionStatus('eventTags', rowNumber, 30, errMsg);
+        }
+      } else if (!create && !update && remove) {
+        // Remove an existing tag.
+        const response = removeGTMResource(
+          'tags', `${newSettings[1]}/tags/${newSettings[3]}`);
+        if (response.details) {
+          // Write error message to sheet.
+          const errMsg = errorResponse(response);
+          logChange(newSettings[2], '',  '', errMsg, '');
+          writeActionStatus('eventTags', rowNumber, 30, errMsg);
+        } else {
+          // Write successful tag deletion to sheet.
+          logChange(newSettings[2], 'gaawe', newSettings[3], 'removed', '');
+          writeActionStatus('eventTags', rowNumber, 30, 'Deleted successfully');
+        }
       } else {
-        // Write error message to sheet.
-        logChange(newSettings[2], '',  '', errorResponse(response), '');
-      }  
-    } else if (!create && update && !remove) {
-      // Update an existing tag.
-      const payload = buildGA4EventPayload(
-        newSettings, triggers, tags, folders, 'update');
-      const response = updateGTMResource(
-        'tags', `${newSettings[1]}/tags/${newSettings[3]}`, payload);
-      if (response.tagManagerUrl) {
-        // Write a successful tag update to sheet.
-        logChange(response.name, response.type, response.tagId, 'updated',
-          response.tagManagerUrl);
-      } else {
-        // Write error message to sheet.
-        logChange(newSettings[2], '',  '', errorResponse(response), '');
-      }
-    } else if (!create && !update && remove) {
-      // Remove an existing tag.
-      const response = removeGTMResource(
-        'tags', `${newSettings[1]}/tags/${newSettings[3]}`);
-      if (response.details) {
-        // Write error message to sheet.
-        logChange(newSettings[2], '',  '', errorResponse(response), '');
-      } else {
-        // Write successful tag deletion to sheet.
-        logChange(newSettings[2], 'gaawe', newSettings[3], 'removed', '');
+        writeActionStatus('eventTags', rowNumber, 30, 'Error: multiple actions selected');
       }
     }
   });

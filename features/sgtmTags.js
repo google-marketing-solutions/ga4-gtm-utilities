@@ -95,38 +95,53 @@ function getTagParams(tag) {
  */
 function modifySgtmTags() {
   const workspacePath = getSelectedWorkspacePath();
-  const tagSettingsData = getDataFromSheet('sgtmTags', 'tags');
+  const tagSettingsData = getDataWithRowNumbers('sgtmTags', 'tags');
   const tags = listGTMResources('tags', workspacePath);
   const triggers = listGTMResources('triggers', workspacePath);
   const folders = listGTMResources('folders', workspacePath);
 
-  tagSettingsData.forEach(newSettings => {
-    const create = newSettings[newSettings.length - 3];
-    const update = newSettings[newSettings.length - 2];
-    const remove = newSettings[newSettings.length - 1];
+  tagSettingsData.forEach(rowInfo => {
+    const newSettings = rowInfo.values;
+    const rowNumber = rowInfo.rowNumber;
+    const create = newSettings[14];
+    const update = newSettings[15];
+    const remove = newSettings[16];
 
-    if (create && !update && !remove) {
-      const payload = buildSgtmTagPayload(newSettings, triggers, tags, folders, 'create');
-      const response = createGTMResource('tags', newSettings[1], payload);
-      if (response && response.tagManagerUrl) {
-        logChange(response.name, response.type, response.tagId, 'created', response.tagManagerUrl);
+    if (create || update || remove) {
+      if (create && !update && !remove) {
+        const payload = buildSgtmTagPayload(newSettings, triggers, tags, folders, 'create');
+        const response = createGTMResource('tags', newSettings[1], payload);
+        if (response && response.tagManagerUrl) {
+          logChange(response.name, response.type, response.tagId, 'created', response.tagManagerUrl);
+          writeActionStatus('sgtmTags', rowNumber, 18, 'Created successfully');
+        } else {
+          const errMsg = errorResponse(response);
+          logChange(newSettings[2], '', '', errMsg, '');
+          writeActionStatus('sgtmTags', rowNumber, 18, errMsg);
+        }
+      } else if (!create && update && !remove) {
+        const payload = buildSgtmTagPayload(newSettings, triggers, tags, folders, 'update');
+        const response = updateGTMResource('tags', `${newSettings[1]}/tags/${newSettings[3]}`, payload);
+        if (response && response.tagManagerUrl) {
+          logChange(response.name, response.type, response.tagId, 'updated', response.tagManagerUrl);
+          writeActionStatus('sgtmTags', rowNumber, 18, 'Updated successfully');
+        } else {
+          const errMsg = errorResponse(response);
+          logChange(newSettings[2], '', '', errMsg, '');
+          writeActionStatus('sgtmTags', rowNumber, 18, errMsg);
+        }
+      } else if (!create && !update && remove) {
+        const response = removeGTMResource('tags', `${newSettings[1]}/tags/${newSettings[3]}`);
+        if (response && response.details) {
+          const errMsg = errorResponse(response);
+          logChange(newSettings[2], '', '', errMsg, '');
+          writeActionStatus('sgtmTags', rowNumber, 18, errMsg);
+        } else {
+          logChange(newSettings[2], 'tag', newSettings[3], 'removed', '');
+          writeActionStatus('sgtmTags', rowNumber, 18, 'Deleted successfully');
+        }
       } else {
-        logChange(newSettings[2], '', '', errorResponse(response), '');
-      }
-    } else if (!create && update && !remove) {
-      const payload = buildSgtmTagPayload(newSettings, triggers, tags, folders, 'update');
-      const response = updateGTMResource('tags', `${newSettings[1]}/tags/${newSettings[3]}`, payload);
-      if (response && response.tagManagerUrl) {
-        logChange(response.name, response.type, response.tagId, 'updated', response.tagManagerUrl);
-      } else {
-        logChange(newSettings[2], '', '', errorResponse(response), '');
-      }
-    } else if (!create && !update && remove) {
-      const response = removeGTMResource('tags', `${newSettings[1]}/tags/${newSettings[3]}`);
-      if (response && response.details) {
-        logChange(newSettings[2], '', '', errorResponse(response), '');
-      } else {
-        logChange(newSettings[2], 'tag', newSettings[3], 'removed', '');
+        writeActionStatus('sgtmTags', rowNumber, 18, 'Error: multiple actions selected');
       }
     }
   });
