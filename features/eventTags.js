@@ -58,7 +58,8 @@ function writeGA4EventTagstoSheet() {
     tempArray[2] = tag.name;
     tempArray[3] = tag.tagId;
     tempArray[4] = tag.paused;
-    tempArray[5] = tag.parameter.find(param => param.key == 'eventName').value;
+    const eventNameParam = tag.parameter.find(param => param.key == 'eventName');
+    tempArray[5] = eventNameParam ? eventNameParam.value : '';
 
     if (sendEcommerceData != undefined) {
       tempArray[6] = sendEcommerceData.value;
@@ -67,12 +68,14 @@ function writeGA4EventTagstoSheet() {
       if (getEcommerceDataFrom.value == 'dataLayer') {
         tempArray[7] = 'dataLayer';
       } else {
-        tempArray[7] = tag.parameter.find(
-          param => param.key == 'ecommerceMacroData').value;
+        const ecommerceMacroData = tag.parameter.find(
+          param => param.key == 'ecommerceMacroData');
+        tempArray[7] = ecommerceMacroData ? ecommerceMacroData.value : '';
       }
     }
-    tempArray[8] = tag.parameter.find(
-      param => param.key == 'measurementIdOverride').value;
+    const measurementIdOverride = tag.parameter.find(
+      param => param.key == 'measurementIdOverride');
+    tempArray[8] = measurementIdOverride ? measurementIdOverride.value : '';
     const eventSettingsVariable = tag.parameter.find(
       param => param.key == 'eventSettingsVariable');
     tempArray[9] = '';
@@ -263,7 +266,7 @@ function buildGA4EventPayload(settings, triggers, tags, folders, modifyOption) {
     }];
   }
   if (/^[0-9]+$/.test(tagFiringPriority)) {
-    tag.priority = {
+    newTag.priority = {
       type: 'integer',
       value: parseInt(tagFiringPriority)
     }
@@ -272,7 +275,7 @@ function buildGA4EventPayload(settings, triggers, tags, folders, modifyOption) {
     newTag.scheduleStartMs = parseInt(scheduleStart);
   }
   if (/^[0-9]+$/.test(scheduleEnd)) {
-    newTag.scheduleEndMs = praseInt(scheduleEnd);
+    newTag.scheduleEndMs = parseInt(scheduleEnd);
   }
   if (sendEcommData) {
     newTag.parameter.push({
@@ -341,9 +344,15 @@ function convertTriggerIdsToNames(ids, triggers) {
     triggerId: '2147479573',
     name: 'Initialization - All Pages'
   });
-  if (ids.length > 0) {
+  if (ids && ids.length > 0) {
     ids.forEach(id => {
-      names.push(triggers.find(trigger => trigger.triggerId == id.trim()).name);
+      const idStr = String(id).trim();
+      const foundTrigger = triggers.find(trigger => String(trigger.triggerId) == idStr);
+      if (foundTrigger) {
+        names.push(foundTrigger.name);
+      } else {
+        names.push('Unknown Trigger (' + idStr + ')');
+      }
     });
   }
   return names;
@@ -381,11 +390,16 @@ function convertTriggerNamesToIds(names, triggers) {
     triggerId: '2147479573',
     name: 'Initialization - All Pages'
   });
-  if (names.length > 0) {
-    names = names.split(',');
-    names.forEach(name => {
-      ids.push(triggers.find(
-        trigger => trigger.name == name.trim()).triggerId.toString());
+  const namesStr = String(names || '').trim();
+  if (namesStr.length > 0) {
+    const nameList = namesStr.split(',');
+    nameList.forEach(name => {
+      const foundTrigger = triggers.find(trigger => trigger.name == name.trim());
+      if (foundTrigger) {
+        ids.push(foundTrigger.triggerId.toString());
+      } else {
+        console.log('Warning: Trigger not found: ' + name);
+      }
     });
   }
   return ids;

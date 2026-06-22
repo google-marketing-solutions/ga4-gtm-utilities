@@ -73,29 +73,31 @@ function checkIfVariableIsInParameters(variableName, parameters) {
   if (parameters) {
     for (let i = 0; i < parameters.length; i++) {
       const param = parameters[i];
-      if (param.key != 'html' && param.key != 'javascript') {
-        if (variableNameWithBrackets == param.value) {
-          return true;
-        }
-      } else {
-        const regexVariableName = new RegExp(variableNameWithBrackets);
-        if (regexVariableName.test(param.value)) {
-          return true;
+      if (param.value !== undefined && param.value !== null) {
+        const paramValueStr = String(param.value);
+        if (param.key != 'html' && param.key != 'javascript') {
+          if (paramValueStr.indexOf(variableNameWithBrackets) !== -1) {
+            return true;
+          }
+        } else {
+          const regexVariableName = new RegExp(variableNameWithBrackets);
+          if (regexVariableName.test(paramValueStr)) {
+            return true;
+          }
         }
       }
-      if (param.list) {
-        return checkIfVariableIsInParameters(variableName, param.list);
+      if (param.list && checkIfVariableIsInParameters(variableName, param.list)) {
+        return true;
       } 
-      if (param.map) {
-        return checkIfVariableIsInParameters(variableName, param.map);
+      if (param.map && checkIfVariableIsInParameters(variableName, param.map)) {
+        return true;
       }
-      if (param.parameter) {
-        return checkIfVariableIsInParameters(variableName, param.parameter);
+      if (param.parameter && checkIfVariableIsInParameters(variableName, param.parameter)) {
+        return true;
       }
     } 
-  } else {
-    return false;
   }
+  return false;
 }
 
 /**

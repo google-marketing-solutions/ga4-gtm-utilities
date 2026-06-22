@@ -55,8 +55,13 @@ function getDataFromSheet(sheetsMetaField, rangeName) {
     }
   });
   let sheet = ss.getSheetByName(sheetsMeta[sheetsMetaField].sheetName);
-  const data = sheet.getRange(ranges.row, ranges.column, sheet.getLastRow(), ranges.numColumns).getValues();
-  return removeEmptyRows(data);
+  const lastRow = sheet.getLastRow();
+  const numRows = lastRow - ranges.row + 1;
+  if (numRows > 0) {
+    const data = sheet.getRange(ranges.row, ranges.column, numRows, ranges.numColumns).getValues();
+    return removeEmptyRows(data);
+  }
+  return [];
 }
 
 /**
@@ -105,7 +110,11 @@ function clearRangeContent(sheetsMetaField, rangeName) {
     }
   });
   const sheet = ss.getSheetByName(sheetsMeta[sheetsMetaField].sheetName);
-  sheet.getRange(ranges.row, ranges.column, sheet.getLastRow(), ranges.numColumns).clearContent();
+  const lastRow = sheet.getLastRow();
+  const numRows = lastRow - ranges.row + 1;
+  if (numRows > 0) {
+    sheet.getRange(ranges.row, ranges.column, numRows, ranges.numColumns).clearContent();
+  }
 }
 
 /**

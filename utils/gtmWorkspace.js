@@ -17,6 +17,7 @@
 /**
  * Writes a user's GTM accounts to the sheet.
  */
+
 function writeGtmAccountsToSheet() {
   const accounts = listGTMResources('accounts');
   if (accounts.length > 0) {
