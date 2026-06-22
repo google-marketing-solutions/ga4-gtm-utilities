@@ -21,7 +21,8 @@ const gtmAPIResources = {
   variables: TagManager.Accounts.Containers.Workspaces.Variables,
   tags: TagManager.Accounts.Containers.Workspaces.Tags,
   triggers: TagManager.Accounts.Containers.Workspaces.Triggers,
-  builtInVariables: TagManager.Accounts.Containers.Workspaces.Built_in_variables
+  builtInVariables: TagManager.Accounts.Containers.Workspaces.Built_in_variables,
+  folders: TagManager.Accounts.Containers.Workspaces.Folders
 };
 
 const gtmRequestDelay = 4000;
@@ -117,23 +118,23 @@ function updateGTMResource(resourceKey, path, payload) {
     Utilities.sleep(gtmRequestDelay);
     return response;
   } catch(e) {
-    console.log(e)
-    return 'error';
+    console.log(e);
+    return e;
   }
 }
 
 /**
  * Remove a GTM tag.
- * @param {string} resourceKey The resource type to be created.
+ * @param {string} resourceKey The resource type to be deleted.
  * @param {string} path
  */
 function removeGTMResource(resourceKey, path) {
   try {
-    const response = gtmAPIResources[resourceKey].delete(payload, path);
+    const response = gtmAPIResources[resourceKey].remove(path);
     Utilities.sleep(gtmRequestDelay);
     return response;
   } catch(e) {
     console.log(e)
-    return 'error';
+    return e;
   } 
 }

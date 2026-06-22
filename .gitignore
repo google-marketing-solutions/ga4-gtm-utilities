@@ -1,0 +1,6 @@
+# Clasp configuration containing private Script ID
+.clasp.json
+
+# Node modules
+node_modules/
+npm-debug.log

@@ -133,13 +133,13 @@ const sheetsMeta = {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 27
+        numColumns: 29
       }, 
       write: {
         row: 2,
         column: 1,
         numRows: 1,
-        numColumns: 24
+        numColumns: 26
       }
     }]
   },

@@ -67,7 +67,7 @@ function listParamsAndUserProperties() {
           mapType = 'user_property';
         }
         param.list.forEach(map => {
-          if (map.map[0].key == 'name') {
+          if (map.map[0].key == 'name' || map.map[0].key == 'parameter') {
             arr.push([
               eventTag.name,
               eventTag.tagId,

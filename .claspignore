@@ -1,0 +1,8 @@
+# Ignore all files by default
+**/*
+
+# Except the JavaScript source files and the manifest
+!features/**/*.js
+!shared/**/*.js
+!utils/**/*.js
+!appsscript.json

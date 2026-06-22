@@ -23,6 +23,7 @@ function writeGA4EventTagstoSheet() {
   const tags = listGTMResources('tags', workspacePath);
   const variables = listGTMResources('variables', workspacePath);
   const triggers = listGTMResources('triggers', workspacePath);
+  const folders = listGTMResources('folders', workspacePath);
   writeGTMVariablesToValidationSheet();
   triggers.push({
     triggerId: '2147479553',
@@ -110,6 +111,8 @@ function writeGA4EventTagstoSheet() {
       tempArray[23] = convertTriggerIdsToNames(
         tag.blockingTriggerId, triggers).join(', ');
     } 
+    tempArray[24] = convertFolderIdsToNames(tag.parentFolderId, folders);
+    tempArray[25] = tag.notes;
     arr.push(tempArray);
     return arr;
   }, []);
@@ -127,6 +130,7 @@ function modifyGA4EventTags() {
   const tagSettingsData = getDataFromSheet('eventTags', 'tags');
   const tags = listGTMResources('tags', workspacePath);
   const triggers = listGTMResources('triggers', workspacePath);
+  const folders = listGTMResources('folders', workspacePath);
   tagSettingsData.forEach(newSettings => {
     const create = newSettings[newSettings.length - 3];
     const update = newSettings[newSettings.length - 2];
@@ -134,7 +138,7 @@ function modifyGA4EventTags() {
     if (create && !update && !remove) {
       // Create a new tag.
       const payload = buildGA4EventPayload(
-        newSettings, triggers, tags, 'create');
+        newSettings, triggers, tags, folders, 'create');
       const response = createGTMResource('tags', newSettings[1], payload);
       if (response.tagManagerUrl) {
         // Write succesful tag creation to sheet.
@@ -147,7 +151,7 @@ function modifyGA4EventTags() {
     } else if (!create && update && !remove) {
       // Update an existing tag.
       const payload = buildGA4EventPayload(
-        newSettings, triggers, tags, 'update');
+        newSettings, triggers, tags, folders, 'update');
       const response = updateGTMResource(
         'tags', `${newSettings[1]}/tags/${newSettings[3]}`, payload);
       if (response.tagManagerUrl) {
@@ -179,10 +183,11 @@ function modifyGA4EventTags() {
  * @param {!Array} settings The settings from the sheet.
  * @param {!Array} triggers Existing triggers in the workspace.
  * @param {!Array} tags Existing tags in the workspace
+ * @param {!Array} folders Existing folders in the workspace.
  * @param {string} modifyOption Either "update" or "create"
  * @return {!Object} The new tag payload object.
  */
-function buildGA4EventPayload(settings, triggers, tags, modifyOption) {
+function buildGA4EventPayload(settings, triggers, tags, folders, modifyOption) {
   const tagName = settings[2];
   const tagId = settings[3];
   const paused = Boolean(settings[4]);
@@ -205,10 +210,14 @@ function buildGA4EventPayload(settings, triggers, tags, modifyOption) {
   const metadataTagName = settings[21];
   const firingTriggerNames = settings[22];
   const blockingTriggerNames = settings[23];
+  const parentFolderName = settings[24];
+  const notes = settings[25];
   const firingTriggerIds = convertTriggerNamesToIds(
     firingTriggerNames, triggers);
   const blockingTriggerIds = convertTriggerNamesToIds(
     blockingTriggerNames, triggers);
+  const parentFolderId = convertFolderNamesToIds(
+    parentFolderName, folders);
 
   const newTag = {
     type: 'gaawe',
@@ -222,6 +231,8 @@ function buildGA4EventPayload(settings, triggers, tags, modifyOption) {
     monitoringMetadataTagNameKey: metadataTagName,
     firingTriggerId: firingTriggerIds,
     blockingTriggerId: blockingTriggerIds,
+    parentFolderId: parentFolderId,
+    notes: notes,
     parameter: [{
       type: 'template',
       key: 'eventName',
@@ -339,6 +350,20 @@ function convertTriggerIdsToNames(ids, triggers) {
 }
 
 /**
+ * Converts a folder ID to a folder names.
+ * @param {string} id A folder ID.
+ * @param {!Array<!Object>} folders An array of folders.
+ * @return {string} The folder name
+ */
+function convertFolderIdsToNames(id, folders) {
+  if (id) {
+    return folders.find(folder => folder.folderId == id).name;
+  } else {
+    return '';
+  }
+}
+
+/**
  * Converts an array of trigger names to an array of trigger ids.
  * @param {!Array<string>} ids An array of trigger names.
  * @param {!Array<!Object>} triggers An array of triggers.
@@ -364,4 +389,18 @@ function convertTriggerNamesToIds(names, triggers) {
     });
   }
   return ids;
+}
+
+/**
+ * Converts a folder name to a folder parent ID.
+ * @param {string} name A folder name.
+ * @param {!Array<!Object>} folders An array of folders.
+ * @return {string} The folder name
+ */
+function convertFolderNamesToIds(name, folders) {
+  if (name) {
+    return folders.find(folder => folder.name == name).folderId;
+  } else {
+    return '';
+  }
 }

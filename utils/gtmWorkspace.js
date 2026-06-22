@@ -18,7 +18,6 @@
  * Writes a user's GTM accounts to the sheet.
  */
 function writeGtmAccountsToSheet() {
-  checkRelease();
   const accounts = listGTMResources('accounts');
   if (accounts.length > 0) {
     const formattedAccounts = accounts.reduce((arr, account) => {
