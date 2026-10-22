@@ -1,0 +1,11 @@
+{
+  "timeZone": "Europe/Berlin",
+  "dependencies": {
+    "enabledAdvancedServices": [{
+      "userSymbol": "TagManager",
+      "serviceId": "tagmanager",
+      "version": "v2"
+    }]
+  },
+  "runtimeVersion": "V8"
+}

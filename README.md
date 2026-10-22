@@ -2,148 +2,137 @@
 
 This is not an officially supported Google product.
 
-This repository contains an Apps Script that can be used in combination with a Google Spreadsheet to modify and list various Tag Manager settings.
+GA4 GTM Utilities is a Google Sheets solution (Apps Script + spreadsheet) for
+**bulk changes to Google Tag Manager containers**, both **client-side (web)
+and server-side**. List tags, variables, triggers, clients and other items in
+a sheet, edit them like any spreadsheet, then preview and apply the changes to
+a GTM workspace in one go.
 
-The script currently performs the following functions:
+### What you can do
 
-| Sheet Name                                                                               | Description                                                       
-|------------------------------------------------------------------------------------------|-------------------------------------------
-| [Modify Parameter or User Property Settings](#existing-parameters-and-user-properties)   | List all parameters and user properties across GA4 tags in a workspace. Create and remove parameters and user properties in GA4 event tags.
-| [Event Tag Settings](#event-tag-settings)                                                | Edit nearly all settings for GA4 event tags.
-| [Variable Usage](#variable-usage)                                                        | List variables, detec usage in other variables, tags, and trigges. Delete variables.
+| Sheet | Containers | What you can do |
+|---|---|---|
+| **GTM Workspace** | all | Select the account, container and workspace (or find a container by its ID). Create a new workspace for your bulk changes. |
+| **Tags** | web, server | Settings shared by **all tags** (Google and non-Google): name, folder, paused, firing and exception triggers, consent checks, firing option, priority, tag sequencing, schedule, notes. Copy rows to duplicate tags, delete tags. |
+| **GA4 Event Tags** | web | Event name, measurement ID, event parameters, user properties, event settings variable, ecommerce. Create, update and delete. |
+| **Event Parameters & User Properties** | web, server | **One row per parameter** of GA4 event tags, Google tags and destination tags, Google Ads / Floodlight tags, Google tag settings variables and server GA4 tags. Add, change, move and delete parameters across many tags at once. |
+| **Google Tags** | web | Google tag and the **destination tags** of the unified Google tag / GTM experience (Google Analytics, Google Ads, Floodlight and Merchant Center destinations): tag/destination ID, configuration parameters, shared event parameters, settings variables. |
+| **Google Ads & Floodlight Tags** | web | Google Ads conversion, remarketing, user-provided data and call conversion tags, Conversion Linker, Floodlight counter and sales tags. |
+| **Server GA4 Tags** | server | Measurement ID, event name, parameters and user properties to include, exclude, add or edit. |
+| **Server Ads & Floodlight Tags** | server | Google Ads conversion, remarketing and user-provided data tags, Conversion Linker and Floodlight tags. |
+| **Clients** | server | All clients: name, type, priority, GA4 client cookie settings, GTM web container client settings, region-specific settings. |
+| **Transformations** | server | Allow, exclude and augment transformations: parameters, affected tags, priority. |
+| **Variables** | web, server | All variables with their main setting (e.g. data layer key, constant value, JavaScript code, lookup table), default value, case conversion and **where each variable is used**. Variables that are still used can't be deleted by accident. |
+| **Triggers** | web, server | All triggers with their event name and conditions written as text (e.g. `{{Page Path}} contains /checkout`) and the tags that use them. |
+| **Advanced Settings** | web, server | **One row per parameter of any tag, variable, client or transformation**, including non-Google tags and custom templates. |
+| **Google Tag Settings** | web | Container-wide **Google tag settings** (the Settings tab of Tag Manager): automatic event detection, domains, user-provided data collection, internal traffic, unwanted referrals, session timeout, cookie settings, consent defaults. The linked destinations are listed in the title row. |
+| **Changelog** | all | Every change made with the tool: when, who, what, and a link to the item in Tag Manager. |
 
-## APIs
+### How it works
 
-The script makes use of the following APIs:
+Every feature sheet works the same way:
 
-*   Google Tag Manager API
-    *   Subject to [normal limitations](https://developers.google.com/tag-platform/tag-manager/api/v2/limits-quotas)
+1. **Select a workspace** in the *GTM Workspace* sheet: menu *GA4 GTM
+   Utilities › Select workspace* (list accounts › containers › workspaces and
+   tick *Select*, or use *Find container by ID*). Tip: use *Create new
+   workspace* to keep bulk changes separate.
+2. Open a feature sheet and use **List from GTM**.
+3. **Edit** the cells. Edited rows are detected automatically.
+   * To **create** an item, add a row and set the *Action* to `Create`. To
+     **duplicate** an item with all its settings, copy its row (including the
+     ID), change what you need (at least the name) and set the *Action* to
+     `Create`.
+   * To **delete** an item, set the *Action* to `Delete`.
+4. **Preview changes** shows in the *Result* column exactly what will change.
+5. **Apply changes to GTM**. The *Result* column and the *Changelog* sheet show
+   what happened.
+6. Review the changes in the Tag Manager workspace and **publish** them there.
 
-## How to Access the Spreadsheet
+Hover over the column headers to see the expected values.
 
-It is strongly recommended that you use the template spreadsheet to use the GA4 GTM Utilities script. Follow these steps to make a copy of the template spreadsheet and start using the script:
+**Formats**
 
-1. Join [this group](https://groups.google.com/g/ga4-gtm-utilities-users) to gain access to the spreadsheet.
-2. Create a copy of [this spreadsheet](https://docs.google.com/spreadsheets/d/1yZVgAlMJbCpZDyimdj0h4QHQbogLJZv83oXqRwT-A40/edit?resourcekey=0-aZ7q7_HASW9TZpFbquEZsw#gid=515466659).
+* Lists (e.g. triggers, consent types): values separated by commas, or one
+  per line if a value contains a comma.
+* Tables (e.g. event parameters, lookup tables): one row per line in the
+  format `name = value`.
+* Trigger conditions: one condition per line, e.g.
+  `{{Page URL}} matches RegEx (ignore case) ^https://shop\.`.
+* Advanced Settings: lists and tables of other parameters are shown as JSON.
 
-If you are not copying the template sheet, then the Google Tag Manager API services need to be enabled in the sheet you create.
+### Safety
 
-## Utilities
+* All changes are made in the selected **workspace**. Nothing is published.
+* Updates are **diff-based**: only the cells you changed are sent to GTM;
+  every other setting of the item (including settings that are not shown in
+  the sheet) is kept unchanged.
+* Rows listed from another container can't update or delete items, and
+  several rows can't change the same item.
+* Variables and triggers that are still used can't be deleted.
+* Every change is recorded in the *Changelog* sheet.
 
-For all of the following activities, you will need to go through the following steps first:
+### Unified Google tag and Tag Manager
 
-1. Select the workspace you want to migrate
-    1. Click GA4 GTM Utilities > GTM Workspace Selection > List GTM Accounts.
-    2. Select an account.
-    3. Click GA4 GTM Utilities > GTM Workspace Selection > List GTM Containers.
-    4. Select a container.
-    5. Click GA4 GTM Utilities > GTM Workspace Selection > List GTM Workspaces.
-    6. Select a workspace. When you select a workspace, the workspace should turn green.
-2. (Optional) If you want a dropdown list of your GTM variables when asked to input values, then click GA4 GTM Utilities > (Optional) GTM Variables > Add GTM Variable Dropdown List. All variables (including built-in variables) in your workspace will be added to the validation sheet and a dropdown list will become available in various parts of the spreadsheet. 
-    7. NOTE: You can either select a variable from the dropdown or enter any other value you want, so please ignore the warning message where the variable dropdown list is present.
+The tool supports the latest Google tag / Tag Manager features:
 
-### Existing Parameters and User Properties
+* Google **destination tags** (`dest_ga`, `dest_aw`, `dest_dc`, `dest_mc`) in
+  the *Google Tags* sheet, and their parameters in the *Event Parameters &
+  User Properties* sheet.
+* Container-wide **Google tag settings** (`gtag_config`) in the *Google Tag
+  Settings* sheet, and the **destinations** linked to the container.
+* Google tag containers (type *Google tag*) can be opened with *Find
+  container by ID* (their G- or GT- ID) to view and edit their Google tag
+  settings. Changes to Google tag containers take effect immediately (they
+  have no workspaces).
 
-#### List Existing Parameters and User Properties
+### APIs, quotas and limits
 
-1. Select your GTM workspace.
-2. Navigate to the “Modify Parameter or User Property Settings” sheet.
-3. Click on GA4 GTM Utilities > Parameters and User Properties > List Existing Parameters and User Properties.
-4. The script will save all parameters and user property settings found across all GA4 event tags found in the workspace to the sheet.
+The script calls the [Google Tag Manager API v2](https://developers.google.com/tag-platform/tag-manager/api/v2)
+with the following OAuth scopes: read and edit Tag Manager containers, edit
+the current spreadsheet, show dialogs, connect to external services and see
+your email address (for the changelog). It can't publish containers or manage
+users.
 
-Listing all of the existing parameters and user properties is useful when you want to delete a large number of existing settings or you want to copy existing settings across tags.
+* Changes are applied with `workspaces.bulk_update` (many changes in one API
+  call), so bulk changes are fast and stay within the
+  [API quota](https://developers.google.com/tag-platform/tag-manager/api/v2/limits-quotas).
+  If a change is rejected, only that change fails; the other changes are
+  applied.
+* Requests are rate limited automatically and retried when the API is busy.
+* Apps Script runs are limited to 6 minutes. If a run takes too long, the
+  remaining rows are marked as not applied; use *Apply changes* again to
+  continue.
+* Values longer than 50,000 characters (the limit of a cell) are shown
+  truncated and can't be edited in the sheet.
 
-#### List Existing GA4 Event Tags
+### How to access the spreadsheet
 
-1. Select your GTM workspace.
-2. Navigate to the “Modify Parameter or User Property Settings” sheet.
-3. Click on GA4 GTM Utilities > Parameters and User Properties > List Existing GA4 Tags.
-4. The script will save each existing GA4 tag in a workspace as a separate row in the sheet.
+It is strongly recommended to use the template spreadsheet:
 
-Listing all of the existing GA4 event tags in a workspace is useful when you want to create new parameter or user property settings for tags and don’t need to modify existing settings.
+1. Join [this group](https://groups.google.com/g/ga4-gtm-utilities-users) to
+   gain access to the spreadsheet.
+2. Create a copy of
+   [this spreadsheet](https://docs.google.com/spreadsheets/d/1yZVgAlMJbCpZDyimdj0h4QHQbogLJZv83oXqRwT-A40/edit?resourcekey=0-aZ7q7_HASW9TZpFbquEZsw#gid=515466659).
 
-#### Delete Existing Parameters and User Properties
+If you use your own spreadsheet instead, add the code with
+[clasp](https://github.com/google/clasp) (`clasp push`), reload the
+spreadsheet and run *GA4 GTM Utilities › Tools › Set up / repair all sheets*.
 
-1. Select your GTM workspace.
-2. Navigate to the “Modify Parameter or User Property Settings” sheet.
-3. Click on GA4 GTM Utilities > Parameters and User Properties > List Existing GA4 Tags.
-4. Set the “Action” column to “Delete” for each parameter or user property you want to delete.
-5. Click on GA4 GTM Utilities > Parameters and User Properties > Modify Parameters and User Properties.
-6. The script will update the existing tags and remove the specified settings.
+### Development
 
-#### Create Parameters and User Properties
+* `features/`: one file per feature sheet (a declarative definition of its
+  columns).
+* `shared/`: the engine (listing, change detection, preview and apply), the
+  executor (bulk updates), the sheet layout, the menu and the changelog.
+* `utils/`: the GTM API client, workspace selection and helpers.
+* `tests/`: Node.js tests that run the Apps Script code with mocks of the
+  Apps Script services and a fake GTM API (`node --test tests/`), plus live
+  tests against the real GTM API (see `tests/README.md`).
 
-1. Select your GTM workspace.
-2. Navigate to the “Modify Parameter or User Property Settings” sheet.
-3. Enter the necessary settings to create a new parameter or user property:
-    1. Columns B - E must have values for a parameter or user property to be successfully created.
-    2. (optional): Click on GA4 GTM Utilities > Parameters and User Properties > List Existing GA4 Tags to get a list of existing settings to use as templates for new settings.
-    3. (optional): Click on GA4 GTM Utilities > Parameters and User Properties > List Existing GA4 Tags to get a list of all of the GA4 event tags in your workspace and provide the tag ID value.
-4. Set the “Action” column to “Create” for each parameter or user property you want to create.
-5. Click on GA4 GTM Utilities > Parameters and User Properties > Modify Parameters and User Properties.
-6. The script will update the existing tags and create the specified settings.
+### Feedback
 
-#### Update Existing Parameters and User Properties
-
-The script does not have a direct way of updating existing parameters or user properties. To achieve the same result, you should list all of the parameters or user properties in your workspace, set the ones that need to be updated to “Delete”, and create new parameters or use properties with the updated settings.
-
-## Event Tag Settings
-
-### List GA4 Event Tags
-
-1. Select your GTM workspace.
-2. Navigate to the “Event Tag Settings” sheet.
-3. Click on GA4 GTM Utilities > Event Tags > List GA4 Event Tags.
-4. The script will attempt to list all of the GA4 event tags and their various settings in the Event Tag Settings sheet.
-
-### Create GA4 Event Tags
-
-It is recommended to click GA4 GTM Utilities > (Optional) GTM Variables > Add GTM Variable Dropdown List Itams so that any variables in your workspace will appear as values that can be selected in various dropdowns in the sheet.
-
-1. Select your GTM workspace in the "GTM Workspace" sheet.
-2. In a blank row, enter the tag name and any additional information. Please note that for Firing Trigger IDs and Blocking Trigger Ids, the trigger names can be provided in a comma separate list to be added to the tag.
-3. Check the "Create" box.
-4. Click on GA4 GTM Utilities > Event Tags > Modify GA4 Event Tags.
-5. The script will attempt to create the tags and log any changes in the "Changelog" sheet.
-
-### Update GA4 Event Tags
-
-It is recommended to click GA4 GTM Utilities > (Optional) GTM Variables > Add GTM Variable Dropdown List Itams so that any variables in your workspace will appear as values that can be selected in various dropdowns in the sheet.
-
-1. Select your GTM workspace in the "GTM Workspace" sheet.
-2. List your existing GA4 event tags.
-3. Edit the settings for the tags you want to update.
-4. Check the "Update" box for each event you want to update.
-5. Click on GA4 GTM Utilities > Event Tags > Modify GA4 Event Tags.
-6. The script will attempt to update the tags and log any changes in the "Changelog" sheet.
-
-### Delete GA4 Event Tags
-
-1. Select your GTM workspace in the "GTM Workspace" sheet.
-2. List your existing GA4 event tags.
-3. Check the "Delete" box for each event you want to delete.
-4. Click on GA4 GTM Utilities > Event Tags > Modify GA4 Event Tags.
-5. The script will attempt to delete the tags and log any changes in the "Changelog" sheet.
-
-## Variable Usage
-
-### List Variables
-
-1. Select your GTM workspace.
-2. Navigate to the “Variable Usage” sheet.
-3. Click on GA4 GTM Utilities > Variable Usage > List.
-4. The script will attempt to list all of the variables in the selected workspace in the "Variable Usage" sheet. For each variable, the script will check if it can be found in any of the triggers, tags, or other variables in the workspace.
-
-### Delete Variables
-
-1. Select your GTM workspace in the "GTM Workspace" sheet.
-2. Navigate to the "Variable Usage Sheet".
-3. List your variables.
-4. Check the "Delete" box for each variable you want to delete.
-5. Click on GA4 GTM Utilities > Variable Usage > Delete.
-6. The script will attempt to delete the variables and log any changes in the "Changelog" sheet.
-
-
-## Feedback
-
-If you have feedback or notice bugs, please feel free to raise an issue in GitHub, post in the group, or submit a response to [this survey](https://docs.google.com/forms/d/e/1FAIpQLScHrZbNU2RZGMtcWTVVEsxe5ZzARFvjqFQziixNPUPCsNcUUQ/viewform). Please note that this is not an officially supported Google product, so support is not guaranteed.
+If you have feedback or notice bugs, please raise an issue in GitHub, post in
+the group, or submit a response to
+[this survey](https://docs.google.com/forms/d/e/1FAIpQLScHrZbNU2RZGMtcWTVVEsxe5ZzARFvjqFQziixNPUPCsNcUUQ/viewform).
+Please note that this is not an officially supported Google product, so
+support is not guaranteed.

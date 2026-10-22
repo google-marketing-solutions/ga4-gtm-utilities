@@ -7,6 +7,14 @@
       "version": "v2"
     }]
   },
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/spreadsheets.currentonly",
+    "https://www.googleapis.com/auth/script.container.ui",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/tagmanager.readonly",
+    "https://www.googleapis.com/auth/tagmanager.edit.containers",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ],
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"
 }

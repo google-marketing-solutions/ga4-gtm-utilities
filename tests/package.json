@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "test:compat": "node index.js"
+  }
+}
