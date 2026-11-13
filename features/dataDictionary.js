@@ -62,7 +62,7 @@ function formatTags() {
           tag.blockingTriggerId, triggers).join(', ');
       }
       tagArray.push([
-        '=hyperlink("' + tag.tagManagerUrl + '","' + tag.name + '")',
+        buildHyperlinkFormula(tag.tagManagerUrl, tag.name),
         tag.tagId,
         tag.type,
         firingTriggers,
