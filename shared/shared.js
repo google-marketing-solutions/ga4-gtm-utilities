@@ -34,6 +34,30 @@ const GA4TagTypes = {
 }
 
 /**
+ * Escapes a value for safe use inside a double-quoted string literal of a
+ * Google Sheets formula (e.g. the arguments of HYPERLINK). Sheets represents a
+ * literal " inside a formula string as "". Without this, a " in a value from
+ * Tag Manager (e.g. a variable or tag name) would close the string and allow
+ * formula injection (CWE-1236).
+ * @param {*} value The value to escape.
+ * @return {string} The escaped string.
+ */
+function escapeSheetsFormulaString(value) {
+  return String(value == null ? '' : value).replace(/"/g, '""');
+}
+
+/**
+ * Builds a Google Sheets HYPERLINK formula with both arguments escaped.
+ * @param {string} url The link URL.
+ * @param {string} label The text shown in the cell.
+ * @return {string} The HYPERLINK formula.
+ */
+function buildHyperlinkFormula(url, label) {
+  return '=HYPERLINK("' + escapeSheetsFormulaString(url) + '","' +
+      escapeSheetsFormulaString(label) + '")';
+}
+
+/**
  * list GA4 event tags from a list of all tags in a workspace.
  * @return {!Array} List of GA4 event tags in a workspace.
  */

@@ -51,7 +51,9 @@ function getAllVariableUsage() {
       const triggerInfo = getVariableUsageForTriggers(triggers, variable);
       const variableInfo = getVariableUsageForVariables(variables, variable);
       finalData.push([
-        `=HYPERLINK("https://tagmanager.google.com/#/container/${variable.path}","${variable.name}")`,
+        buildHyperlinkFormula(
+          `https://tagmanager.google.com/#/container/${variable.path}`,
+          variable.name),
         variable.path,
         tagInfo.tagUsageCount, 
         tagInfo.tagNames,
